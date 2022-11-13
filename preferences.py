@@ -1,8 +1,8 @@
 from bpy.types import AddonPreferences, PropertyGroup, Scene
 from bpy.props import BoolProperty, PointerProperty, CollectionProperty
-from .presets import BlenderProjectManager_PT_Presets, BlenderProjectManager_Subdir
+from .presets import BLENDERPROJECTMANAGER_PT_presets, BLENDERPROJECTMANAGER_subdir
 
-class PREFERENCES_PT_BlenderProjectManager(AddonPreferences):
+class BLENDERPROJECTMANAGER_PT_preferences(AddonPreferences):
     bl_idname = __package__
 
     def draw(self, context):
@@ -20,7 +20,7 @@ class PREFERENCES_PT_BlenderProjectManager(AddonPreferences):
         row.operator("preferences.add_bpm_subdir", text="", icon="ADD", emboss=False)
 
         # Add presetmanager here
-        BlenderProjectManager_PT_Presets.draw_panel_header(row)
+        BLENDERPROJECTMANAGER_PT_presets.draw_panel_header(row)
 
         # Preset folder list
         for i, subdir in enumerate(subdirs):
@@ -28,12 +28,12 @@ class PREFERENCES_PT_BlenderProjectManager(AddonPreferences):
             row.prop(subdir, "name")
             row.operator("preferences.remove_bpm_subdir", text="", icon='X', emboss=False).index = i
         
-class BlenderProjectManager_Preferences(PropertyGroup):
+class BLENDERPROJECTMANAGER_preferences(PropertyGroup):
     auto_gen_file: BoolProperty(default=True)
 
-class BlenderProjectManager_Scene(PropertyGroup):
-    prefs: PointerProperty(type=BlenderProjectManager_Preferences)
-    subdirs: CollectionProperty(type=BlenderProjectManager_Subdir)
+class BLENDERPROJECTMANAGER_scene(PropertyGroup):
+    prefs: PointerProperty(type=BLENDERPROJECTMANAGER_preferences)
+    subdirs: CollectionProperty(type=BLENDERPROJECTMANAGER_subdir)
 
     @classmethod
     def register(cls):
@@ -48,7 +48,7 @@ class BlenderProjectManager_Scene(PropertyGroup):
         del Scene.bpm
 
 classes = [ 
-    BlenderProjectManager_Preferences, 
-    BlenderProjectManager_Scene, 
-    PREFERENCES_PT_BlenderProjectManager
+    BLENDERPROJECTMANAGER_preferences, 
+    BLENDERPROJECTMANAGER_scene, 
+    BLENDERPROJECTMANAGER_PT_preferences
 ]

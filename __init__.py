@@ -19,7 +19,7 @@ from bpy.types import Operator, Panel
 from bpy.utils import register_class, unregister_class
 from .utils import load_presets, error_dialog, set_default_preset, on_register, inject_code
 
-from .preferences import BlenderProjectManager_PT_Presets, classes as preferences_classes
+from .preferences import BLENDERPROJECTMANAGER_PT_presets, classes as preferences_classes
 from .presets import classes as presets_classes
 
 
@@ -38,7 +38,7 @@ bl_info = {
 
 INJECTED = False
 
-class BlenderProjectManager_Add(Operator):
+class BLENDERPROJECTMANAGER_OT_Add(Operator):
     bl_label = "New Project"
     bl_idname = "wm.project_add"
     bl_description = "Create a Blender project folder"
@@ -82,7 +82,7 @@ class BlenderProjectManager_Add(Operator):
     def draw(self, context):
         pass
 
-class SubPanel(Panel):
+class BLENDERPROJECTMANAGER_PT_browser(Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
     bl_label = "Project Settings"
@@ -109,7 +109,7 @@ class SubPanel(Panel):
         row.operator("preferences.add_bpm_subdir", text="", icon="ADD", emboss=False)
 
         # Add presetmanager here
-        BlenderProjectManager_PT_Presets.draw_panel_header(row)
+        BLENDERPROJECTMANAGER_PT_presets.draw_panel_header(row)
 
         # Preset folder list
         for i, subdir in enumerate(subdirs):
@@ -118,7 +118,7 @@ class SubPanel(Panel):
             row.operator("preferences.remove_bpm_subdir", text="", icon='X', emboss=False).index = i
 
 
-classes = [BlenderProjectManager_Add, SubPanel] + presets_classes + preferences_classes
+classes = [BLENDERPROJECTMANAGER_OT_Add, BLENDERPROJECTMANAGER_PT_browser] + presets_classes + preferences_classes
 
 
 def register():
