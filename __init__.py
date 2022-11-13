@@ -64,7 +64,6 @@ class BLENDERPROJECTMANAGER_OT_Add(Operator):
         # Create the subdirs
 
         for subdir in context.scene.bpm.subdirs:
-            print(subdir.name)
             os.mkdir(os.path.join(self.filepath, subdir.name))
 
         # Create and open the new blender file
