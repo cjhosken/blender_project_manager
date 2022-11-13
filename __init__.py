@@ -13,24 +13,23 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import bpy
+import bpy, os
 from bpy.props import StringProperty
+from bpy.types import Operator, Panel
 from bpy.utils import register_class, unregister_class
+from .utils import load_presets, error_dialog, set_default_preset, on_register, inject_code
 
-from bpy_extras.io_utils import ExportHelper
+from .preferences import BlenderProjectManager_PT_Presets, classes as preferences_classes
+from .presets import classes as presets_classes
 
-from bpy.app.handlers import persistent
-import os
-
-from .preferences import *
 
 bl_info = {
     "name" : "Project Manager",
     "author" : "Christopher Hosken",
     "version" : (1, 0, 0),
-    "blender" : (3, 2, 1),
+    "blender" : (3, 3, 0),
     "description" : "",
-    "warning" : "This Addon is currently under development",
+    "warning" : "",
     "support": "COMMUNITY",
     "doc_url": "",
     "tracker_url": "",
@@ -39,7 +38,7 @@ bl_info = {
 
 INJECTED = False
 
-class BlenderProjectManager_Add(bpy.types.Operator):
+class BlenderProjectManager_Add(Operator):
     bl_label = "New Project"
     bl_idname = "wm.project_add"
     bl_description = "Create a Blender project folder"
@@ -83,7 +82,7 @@ class BlenderProjectManager_Add(bpy.types.Operator):
     def draw(self, context):
         pass
 
-class SubPanel(bpy.types.Panel):
+class SubPanel(Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
     bl_label = "Project Settings"
@@ -92,7 +91,7 @@ class SubPanel(bpy.types.Panel):
     def poll(cls, context):
         sfile = context.space_data
         operator = sfile.active_operator
-        setDefaultPresetValue()
+        set_default_preset()
         return operator.bl_idname == 'WM_OT_project_add'
 
     def draw(self, context):
@@ -118,112 +117,9 @@ class SubPanel(bpy.types.Panel):
             row.prop(subdir, "name")
             row.operator("preferences.remove_bpm_subdir", text="", icon='X', emboss=False).index = i
 
- 
 
-# This is a hack, chances of this crashing is extremely high. It would be better to request Blender to create an easier solution for this.
-# https://blender.stackexchange.com/questions/13519/get-list-of-operators-in-a-menu-layout
+classes = [BlenderProjectManager_Add, SubPanel] + presets_classes + preferences_classes
 
-def inject_code():
-    insert_after = 'layout.operator("wm.open_mainfile"'
-    insert_code = '    layout.operator("wm.project_add", text="New Project", icon="NEWFOLDER")\n'
-    bpy_type = "TOPBAR_MT_file"
-    bpy_type_class = getattr(bpy.types, bpy_type)
-    #module = bpy_type_class.__module__
-
-    filepath = bpy_type_class.draw.__code__.co_filename
-    if filepath == "<string>":
-        print("Aborting, modifications are active")
-        return False
-    try:
-        file = open(filepath, "r")
-        lines = file.readlines()
-    except:
-        print("%s couldn't be accessed, aborting." % filepath)
-        return False
-
-    line_start = bpy_type_class.draw.__code__.co_firstlineno - 1
-
-    for i in range(line_start, len(lines)):
-        line = lines[i]
-        if not line[0].isspace() and line.lstrip()[0] not in ("#", "\n", "\r"):
-            break
-
-    line_end = i
-
-    # Unindent draw func by one level, since it won't sit inside a class
-    lines = [l[4:] for l in lines[line_start:line_end]]
-
-    for i, line in enumerate(lines, 1):
-        if insert_after in line:
-            print("FOUND INSERT LINE")
-            lines.insert(i, insert_code)
-            break
-    else:
-        print("COULDN'T FIND INSERTION POINT")
-        return False
-
-    # Debug output
-    #f = open("D:\\s.txt", "w").writelines(lines)
-
-    l = {}
-    exec("".join(lines), {}, l)
-    print(l)
-
-    #bpy_type_class.draw.__code__ = code_object # Doesn't work, since a single func is not a module
-
-    bpy_type_class.draw = l['draw'] # exec defined our custom draw() func!
-
-    return True
-
-
-from .preferences import classes as preferences_classes
-classes = [BlenderProjectManager_Add, SubPanel] + preferences_classes
-
-
-
-def load_presets():
-    import os
-    import shutil
-
-    script_file = os.path.realpath(__file__)
-    directory = os.path.dirname(script_file)
-
-    my_bundled_presets = os.path.join(directory, "presets")
-
-    my_presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets/project_presets")
-
-    if not os.path.isdir(my_presets):
-        os.makedirs(my_presets)
-
-        files = os.listdir(my_bundled_presets)
-
-        [shutil.copy2(os.path.join(my_bundled_presets, f), my_presets) for f in files]
-
-
-def error_dialog(message = "", title = "Error!", icon = 'ERROR'):
-
-    def draw(self, context):
-        self.layout.label(text=message)
-
-    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
-
-def setDefaultPresetValue():
-    bpm = bpy.context.scene.bpm
-    if not bpm.subdirs:
-        bpm.subdirs.clear()
-
-        subdir = bpm.subdirs.add()
-        subdir.name = 'assets'
-
-        subdir = bpm.subdirs.add()
-        subdir.name = 'cache'
-
-        subdir = bpm.subdirs.add()
-        subdir.name = 'output'
-
-@persistent
-def onRegister(scene):
-    setDefaultPresetValue()
 
 def register():
     global INJECTED
@@ -235,7 +131,7 @@ def register():
     if (not INJECTED):
         INJECTED = inject_code()
 
-    bpy.app.handlers.load_post.append(onRegister)
+    bpy.app.handlers.load_post.append(on_register)
 
 
 def unregister():
