@@ -91,7 +91,7 @@ class BLENDERPROJECTMANAGER_PT_browser(Panel):
         sfile = context.space_data
         operator = sfile.active_operator
         set_default_preset()
-        return operator.bl_idname == 'WM_OT_project_add'
+        return operator is not None and operator.bl_idname == 'WM_OT_project_add'
 
     def draw(self, context):
         layout = self.layout
