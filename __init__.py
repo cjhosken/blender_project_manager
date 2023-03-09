@@ -17,7 +17,7 @@ import bpy, os
 from bpy.props import StringProperty
 from bpy.types import Operator, Panel
 from bpy.utils import register_class, unregister_class
-from .utils import load_presets, error_dialog, set_default_preset, on_register, inject_code
+from .utils import load_presets, error_dialog, set_default_preset
 
 from .preferences import BLENDERPROJECTMANAGER_PT_presets, classes as preferences_classes
 from .presets import classes as presets_classes
@@ -27,7 +27,7 @@ bl_info = {
     "name" : "Project Manager",
     "author" : "Christopher Hosken",
     "version" : (1, 0, 0),
-    "blender" : (3, 3, 0),
+    "blender" : (3, 4, 0),
     "description" : "",
     "warning" : "",
     "support": "COMMUNITY",
@@ -35,8 +35,6 @@ bl_info = {
     "tracker_url": "",
     "category" : "System"
 }
-
-INJECTED = False
 
 class BLENDERPROJECTMANAGER_OT_Add(Operator):
     bl_label = "New Project"
@@ -120,19 +118,31 @@ class BLENDERPROJECTMANAGER_PT_browser(Panel):
 classes = [BLENDERPROJECTMANAGER_OT_Add, BLENDERPROJECTMANAGER_PT_browser] + presets_classes + preferences_classes
 
 
+# This is a hack, chances of this crashing is extremely high. It would be better to request Blender to create an easier solution for this.
+# https://blender.stackexchange.com/questions/13519/get-list-of-operators-in-a-menu-layout
+
+# As of 9/3/2023, I've reverted the code to just prepend the function into the menu.
+
+def draw(self, context):
+    layout = self.layout
+    layout.operator("wm.project_add", text="New Project", icon='FILE_FOLDER')
+
+
 def register():
-    global INJECTED
     load_presets()
 
     for cls in classes:
         register_class(cls)
 
-    if (not INJECTED):
-        INJECTED = inject_code()
+    bpy.types.TOPBAR_MT_file.prepend(draw)
 
-    bpy.app.handlers.load_post.append(on_register)
 
 
 def unregister():
     for cls in classes:
         unregister_class(cls)
+
+    bpy.types.TOPBAR_MT_file.remove(draw)
+
+if __name__ == "__main__":
+    register()
