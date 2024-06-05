@@ -27,7 +27,7 @@ bl_info = {
     "name" : "Project Manager",
     "author" : "Christopher Hosken",
     "version" : (1, 0, 0),
-    "blender" : (3, 4, 0),
+    "blender" : (4, 1, 0),
     "description" : "",
     "warning" : "",
     "support": "COMMUNITY",
