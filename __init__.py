@@ -73,7 +73,6 @@ class BLENDERPROJECTMANAGER_PT_browser(Panel):
     def poll(cls, context):
         sfile = context.space_data
         operator = sfile.active_operator
-        set_default_preset()
         return operator is not None and operator.bl_idname == 'WM_OT_project_add'
 
     def draw(self, context):
@@ -90,28 +89,18 @@ class BLENDERPROJECTMANAGER_PT_browser(Panel):
         row.label(text="Custom Subdirectories")
         row.operator("preferences.add_bpm_subdir", text="", icon="ADD", emboss=False)
 
-        # Add presetmanager here
         BLENDERPROJECTMANAGER_PT_presets.draw_panel_header(row)
 
-        # Preset folder list
         for i, subdir in enumerate(subdirs):
             row = box.row()
             row.prop(subdir, "name")
             row.operator("preferences.remove_bpm_subdir", text="", icon='X', emboss=False).index = i
 
-
 classes = [BLENDERPROJECTMANAGER_OT_Add, BLENDERPROJECTMANAGER_PT_browser] + presets_classes + preferences_classes
-
-
-# This is a hack, chances of this crashing is extremely high. It would be better to request Blender to create an easier solution for this.
-# https://blender.stackexchange.com/questions/13519/get-list-of-operators-in-a-menu-layout
-
-# As of 9/3/2023, I've reverted the code to just prepend the function into the menu.
 
 def draw(self, context):
     layout = self.layout
     layout.operator("wm.project_add", text="New Project", icon='FILE_FOLDER')
-
 
 def register():
     load_presets()
@@ -120,8 +109,6 @@ def register():
         register_class(cls)
 
     bpy.types.TOPBAR_MT_file.prepend(draw)
-
-
 
 def unregister():
     for cls in classes:
